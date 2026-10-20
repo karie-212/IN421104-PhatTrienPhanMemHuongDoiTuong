@@ -1,8 +1,11 @@
+using EduHub.Ch02.Domain;
+using EduHub.Ch02.Logging;
 using EduHub.Ch02.Notifications;
+using EduHub.Ch02.Repositories;
 
 namespace Ch02.Refactor.Tests;
 
-// Test cho các design pattern (Factory, ...), theo mẫu AAA.
+// Test cho các design pattern (Factory, Decorator, ...), theo mẫu AAA.
 public class PatternTests
 {
     [Theory]
@@ -33,5 +36,33 @@ public class PatternTests
 
         // Assert
         Assert.Throws<ArgumentOutOfRangeException>(act);
+    }
+
+    [Fact]
+    public void LoggingClubRepository_Add_LogsClubNameAndDelegatesToInner()
+    {
+        // Arrange
+        var inner = new InMemoryClubRepository();
+        var logger = new FakeLogger();
+        var repository = new LoggingClubRepository(inner, logger);
+        var club = Club.Create("CLB Lập trình", "Sinh hoạt lập trình mỗi thứ Bảy");
+
+        // Act
+        repository.Add(club);
+
+        // Assert
+        Assert.Contains(logger.Messages, m => m.Contains("CLB Lập trình"));
+        Assert.Same(club, inner.GetById(club.Id));
+    }
+
+    // Logger giả: lưu message vào danh sách để test kiểm tra, không in ra đâu cả.
+    private class FakeLogger : IAppLogger
+    {
+        public List<string> Messages { get; } = new();
+
+        public void Info(string message)
+        {
+            Messages.Add(message);
+        }
     }
 }
