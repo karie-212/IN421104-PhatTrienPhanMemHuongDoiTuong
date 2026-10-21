@@ -2,6 +2,7 @@ using EduHub.Ch02.Domain;
 using EduHub.Ch02.Logging;
 using EduHub.Ch02.Notifications;
 using EduHub.Ch02.Patterns.Observers;
+using EduHub.Ch02.Patterns.Strategies;
 using EduHub.Ch02.Repositories;
 using EduHub.Ch02.Services;
 
@@ -95,6 +96,69 @@ public class PatternTests
 
         // Assert
         Assert.Equal(0, observer.CallCount);
+    }
+
+    [Fact]
+    public void ReportStrategies_RenderSameStats_ProduceDifferentFormats()
+    {
+        // Arrange
+        var stats = new List<ClubStat>
+        {
+            new("CLB Lập trình", 12, 3, 20, 15),
+            new("CLB Tiếng Anh", 8, 1, 6, 4)
+        };
+        var console = new ConsoleReportStrategy();
+        var csv = new CsvReportStrategy();
+
+        // Act
+        var consoleOutput = console.Render(stats);
+        var csvOutput = csv.Render(stats);
+
+        // Assert
+        Assert.NotEqual(consoleOutput, csvOutput);
+        Assert.Contains("CLB: CLB Lập trình | Thành viên: 12 | Sự kiện: 3 | Đăng ký: 20 | Check-in: 15", consoleOutput);
+        var csvLines = csvOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        Assert.Equal(3, csvLines.Length);
+        Assert.Equal("ClubName,Members,Events,Registered,CheckedIn", csvLines[0]);
+        Assert.Equal("\"CLB Lập trình\",12,3,20,15", csvLines[1]);
+    }
+
+    [Fact]
+    public void ReportService_Generate_PassesComputedStatsToStrategy()
+    {
+        // Arrange
+        var clubs = new InMemoryClubRepository();
+        var members = new InMemoryMemberRepository();
+        var events = new InMemoryEventRepository();
+        var club = Club.Create("CLB Lập trình", "Sinh hoạt lập trình mỗi thứ Bảy");
+        clubs.Add(club);
+        var member = new Member { Id = Guid.NewGuid(), Name = "Nguyễn Văn A", Email = "a@student.dthu.edu.vn", ClubId = club.Id };
+        members.Add(member);
+        var ev = new Event { Id = Guid.NewGuid(), ClubId = club.Id, Title = "Workshop Git", Date = DateTime.Today };
+        ev.Register(member.Id);
+        ev.CheckIn(member.Id);
+        events.Add(ev);
+        var service = new ReportService(clubs, members, events);
+        var spy = new SpyReportStrategy();
+
+        // Act
+        var output = service.Generate(spy);
+
+        // Assert
+        Assert.Equal("spy", output);
+        Assert.Equal(new ClubStat("CLB Lập trình", 1, 1, 1, 1), Assert.Single(spy.Received!));
+    }
+
+    // Strategy giả: lưu lại danh sách ClubStat nhận được.
+    private class SpyReportStrategy : IReportStrategy
+    {
+        public IReadOnlyList<ClubStat>? Received { get; private set; }
+
+        public string Render(IReadOnlyList<ClubStat> stats)
+        {
+            Received = stats;
+            return "spy";
+        }
     }
 
     // Observer giả: chỉ đếm số lần được báo.
