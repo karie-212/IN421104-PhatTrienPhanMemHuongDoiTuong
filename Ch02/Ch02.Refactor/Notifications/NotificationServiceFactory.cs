@@ -2,7 +2,7 @@ namespace EduHub.Ch02.Notifications;
 
 /// <summary>
 /// Factory chọn INotificationService theo NotificationChannel.
-/// Chuỗi if/else Gmail/Yahoo cũ trong ClubManager thực chất chỉ là một kênh Email
+/// Chuỗi if/else Gmail/Yahoo trong God class cũ thực chất chỉ là một kênh Email
 /// (chỉ khác tên miền người nhận), nên được gộp thành EmailNotificationService.
 /// Factory chọn theo kênh, không theo địa chỉ; nơi gọi chỉ biết INotificationService.
 /// </summary>

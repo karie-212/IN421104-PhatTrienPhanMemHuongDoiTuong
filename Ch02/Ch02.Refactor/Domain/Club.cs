@@ -1,6 +1,6 @@
 namespace EduHub.Ch02.Domain;
 
-/// <summary>Câu lạc bộ. Quy tắc nghiệp vụ nên nằm ở đây, không nằm trong ClubManager.</summary>
+/// <summary>Câu lạc bộ. Quy tắc nghiệp vụ nằm ở đây, không nằm trong service.</summary>
 public class Club
 {
     public const int MaxMembers = 50;

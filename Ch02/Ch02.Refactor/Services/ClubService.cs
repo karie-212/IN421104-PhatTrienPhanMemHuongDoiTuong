@@ -6,7 +6,7 @@ using EduHub.Ch02.Repositories;
 namespace EduHub.Ch02.Services;
 
 /// <summary>
-/// Tách từ ClubManager: chỉ điều phối nghiệp vụ CLB và thành viên.
+/// Tách từ God class cũ: chỉ điều phối nghiệp vụ CLB và thành viên.
 /// Mọi phụ thuộc là interface nhận qua constructor, không new class cụ thể nào (DIP).
 /// Không biết NotificationServiceFactory, chỉ dùng INotificationService đã được tạo sẵn.
 /// </summary>

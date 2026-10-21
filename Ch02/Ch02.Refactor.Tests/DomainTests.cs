@@ -1,4 +1,3 @@
-using EduHub.Ch02;
 using EduHub.Ch02.Domain;
 
 namespace Ch02.Refactor.Tests;
@@ -7,15 +6,15 @@ namespace Ch02.Refactor.Tests;
 // Mỗi test chỉ kiểm tra MỘT hành vi. Đặt tên: TênMethod_TìnhHuống_KếtQuảMongĐợi.
 public class DomainTests
 {
-    // Test mẫu đã viết sẵn: chạy được ngay trên ClubManager hiện tại.
+    // Test mẫu: luật "tên CLB không được rỗng" nay nằm ở Club.Create.
     [Fact]
     public void CreateClub_WithEmptyName_ThrowsArgumentException()
     {
         // Arrange
-        var manager = new ClubManager();
+        var name = "";
 
         // Act
-        var act = () => manager.CreateClub("", "mô tả", "p@gmail.com");
+        var act = () => Club.Create(name, "mô tả");
 
         // Assert
         Assert.Throws<ArgumentException>(act);
