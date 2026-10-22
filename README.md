@@ -28,6 +28,15 @@ Qua từng chương của môn học, hệ thống được phân tích, thiết
 | 02 | Refactoring với SOLID và Design Patterns | [`Ch02`](./Ch02) | Đang làm |
 | ... | *Các chương tiếp theo đang được cập nhật* | – | – |
 
+## Nhánh
+
+| Nhánh | Nội dung |
+|---:|---|
+| `main` | Gồm các chương đã hoàn thành |
+| `ch01/0024418950` | Bài tập Ch01 |
+| `ch02/0024418950` | Bài tập Ch02 |
+| ... | *Các chương tiếp theo sẽ được bổ sung* |
+
 ## Cấu trúc thư mục
 
 ```
