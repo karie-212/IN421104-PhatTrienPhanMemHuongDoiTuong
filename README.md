@@ -31,7 +31,7 @@ Qua từng chương của môn học, hệ thống được phân tích, thiết
 ## Nhánh
 
 | Nhánh | Nội dung |
-|---:|---|
+|---|---|
 | `main` | Gồm các chương đã hoàn thành |
 | `ch01/0024418950` | Bài tập Ch01 |
 | `ch02/0024418950` | Bài tập Ch02 |
