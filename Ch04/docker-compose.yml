@@ -15,5 +15,21 @@ services:
       timeout: 3s
       retries: 15
 
+  api:
+    build:
+      context: .
+      dockerfile: EduHub.API/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      # Connection string lấy từ biến môi trường, không hardcode trong appsettings khi chạy Docker
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=eduhub;Username=postgres;Password=${DB_PASSWORD:-secret}
+      Database__AutoMigrate: "true"
+    ports:
+      - "${API_PORT:-8080}:8080"
+
 volumes:
   postgres_data:

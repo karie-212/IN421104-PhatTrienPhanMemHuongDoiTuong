@@ -1,3 +1,4 @@
+using EduHub.API.Middleware;
 using EduHub.Application.Clubs;
 using EduHub.Application.Events;
 using EduHub.Application.Registrations;
@@ -11,15 +12,18 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// TODO [Nhiệm vụ 6] Serilog: builder.Host.UseSerilog((ctx, cfg) => cfg.ReadFrom.Configuration(ctx.Configuration).Enrich.FromLogContext());
-//  và bổ sung mục "Serilog" (MinimumLevel, WriteTo Console) trong appsettings.json.
+// Serilog: cấu hình đọc từ appsettings.json (mục "Serilog"), ghi log có cấu trúc ra console
+builder.Host.UseSerilog((ctx, cfg) => cfg
+    .ReadFrom.Configuration(ctx.Configuration)
+    .Enrich.FromLogContext());
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// TODO [Nhiệm vụ 6] builder.Services.AddProblemDetails();
-//                   builder.Services.AddExceptionHandler<GlobalExceptionHandler>();  (cần using EduHub.API.Middleware)
+// ProblemDetails (RFC 9457) + bộ xử lý lỗi toàn cục
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 // Connection string: appsettings.Development.json hoặc biến môi trường ConnectionStrings__DefaultConnection (Docker)
 builder.Services.AddDbContext<EduHubDbContext>(options =>
@@ -49,8 +53,9 @@ if (app.Configuration.GetValue("Database:AutoMigrate", app.Environment.IsDevelop
     await db.SeedAsync();
 }
 
-// TODO [Nhiệm vụ 6] app.UseSerilogRequestLogging();  rồi  app.UseExceptionHandler();  rồi  app.UseStatusCodePages();
-//  (thứ tự này để log request thấy đúng mã trạng thái sau khi lỗi được đổi thành ProblemDetails)
+app.UseSerilogRequestLogging(); // đứng trước UseExceptionHandler để log đúng mã trạng thái sau khi lỗi đã được đổi thành ProblemDetails
+app.UseExceptionHandler();      // bắt lỗi của mọi middleware/controller phía sau
+app.UseStatusCodePages();       // 404/405... không có body cũng trả ProblemDetails
 
 app.UseSwagger();
 app.UseSwaggerUI();
