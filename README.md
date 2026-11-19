@@ -25,7 +25,8 @@ Qua từng chương của môn học, hệ thống được phân tích, thiết
 | Chương | Chủ đề | Mã nguồn | Trạng thái |
 |:---:|---|:---:|:---:|
 | 01 | Phân tích yêu cầu và mô hình hoá miền (domain modeling) | [`Ch01`](./Ch01) | Hoàn thành |
-| 02 | Refactoring với SOLID và Design Patterns | [`Ch02`](./Ch02) | Đang làm |
+| 02 | Refactoring với SOLID và Design Patterns | [`Ch02`](./Ch02) | Hoàn thành |
+| 03 | Clean Architecture và REST API | [`Ch03`](./Ch03) | Hoàn thành |
 | ... | *Các chương tiếp theo đang được cập nhật* | – | – |
 
 ## Nhánh
@@ -35,6 +36,7 @@ Qua từng chương của môn học, hệ thống được phân tích, thiết
 | `main` | Gồm các chương đã hoàn thành |
 | `ch01/0024418950` | Bài tập Ch01 |
 | `ch02/0024418950` | Bài tập Ch02 |
+| `ch03/0024418950` | Bài tập Ch03 |
 | ... | *Các chương tiếp theo sẽ được bổ sung* |
 
 ## Cấu trúc thư mục
@@ -43,6 +45,7 @@ Qua từng chương của môn học, hệ thống được phân tích, thiết
 IN421104-PhatTrienPhanMemHuongDoiTuong/
 ├── Ch01/
 ├── Ch02/
+├── Ch03/
 ├── ...            # các chương tiếp theo sẽ được cập nhật dần
 └── README.md
 ```
