@@ -1,38 +1,56 @@
-# Ch04 — EF Core, PostgreSQL và Full API: EduHub Database (starter)
+# Ch04 — EF Core, PostgreSQL và Full API: EduHub Database
 
-Bài tập Ch04, đánh giá theo HĐ1.3 (Bài tập chương). Đọc đề bài đầy đủ ở `../de-bai.html` và rubric ở `../rubric.html`.
-CLO liên quan: CLO1, CLO2, CLO4 (và CLO5, CLO7 qua quy trình Pull Request và tự nghiên cứu).
+Bài tập Chương 4, môn IN421104 - Phát triển phần mềm hướng đối tượng.
 
-Starter đã build được. Mọi chỗ cần bạn viết đều có `// TODO [Nhiệm vụ n]` khớp với đề bài.
+## Cấu trúc
+
+```
+EduHub.Domain          Entities (Member, Club, Event, Registration) + interface repository + IUnitOfWork
+EduHub.Application     Handler/Service, DTO + mapping, PagedResult/PageRequest, AppException, IEventReportQuery
+EduHub.Infrastructure  EduHubDbContext (Fluent API + SeedAsync), EF repository, EfUnitOfWork,
+                       DapperEventReportQuery (báo cáo SQL thuần), Migrations/Init
+EduHub.API             Controllers, Requests (validation), GlobalExceptionHandler (ProblemDetails), Serilog, Dockerfile
+EduHub.Tests           xUnit + Moq + SQLite in-memory (26 test)
+```
 
 ## Chạy
 
 ```bash
 docker compose up -d                       # PostgreSQL 16 (DB_PORT=5433 nếu cổng 5432 đã bị chiếm)
 dotnet build
-dotnet test                                # test mẫu của Domain chạy ngay; các test Skip là việc của bạn
-dotnet ef migrations add Init --project EduHub.Infrastructure --startup-project EduHub.API
+dotnet test                                # 26/26 pass, dùng SQLite in-memory, không cần PostgreSQL thật
 dotnet run --project EduHub.API --urls http://localhost:5000     # Swagger: http://localhost:5000/swagger
 ```
 
-Cài công cụ nếu chưa có: `dotnet tool install --global dotnet-ef`.
+API tự `MigrateAsync()` và `SeedAsync()` khi khởi động (mặc định bật ở Development).
 
-## Danh sách TODO theo nhiệm vụ
+## Endpoint
 
-| Nhiệm vụ | Việc cần làm | Nơi làm |
+| Method | Route | Kết quả |
 |---|---|---|
-| 1. EF Core, PostgreSQL, migration, seeding (20đ) | `OnModelCreating`, `SeedAsync`, `AddDbContext`, tự động migrate khi khởi động, migration `Init` | `EduHubDbContext.cs`, `Program.cs` |
-| 2. Repository và Unit of Work (15đ) | `EfUnitOfWork`, các hàm truy vấn của repository, DI | `Repositories/*.cs` |
-| 3. CRUD, DTO, validation, phân trang (25đ) | `SearchAsync` (filter, order, skip/take), `EventService`, `ClubService`, `GetEventsQueryHandler`, validation trong `Requests.cs` | `EduHub.Application`, `Requests.cs` |
-| 4. Registration API (15đ) | đăng ký, hủy, danh sách đăng ký, các test Moq | `RegisterForEventCommand.cs`, `RegistrationQueries.cs`, `EfRegistrationRepository.cs`, `EduHub.Tests` |
-| 5. Dapper cho báo cáo (10đ) | câu SQL và `QueryAsync` | `DapperEventReportQuery.cs` |
-| 6. ProblemDetails và Serilog (15đ) | `GlobalExceptionHandler`, `AddProblemDetails`, cấu hình Serilog, log có cấu trúc | `GlobalExceptionHandler.cs`, `Program.cs`, `appsettings.json` |
+| GET | `/api/clubs?search=&page=&pageSize=` | 200 `{items,totalCount,page,pageSize,totalPages}` |
+| GET, PUT, DELETE | `/api/clubs/{id}` | 200 / 404, 204 |
+| POST | `/api/clubs` | 201 / 400 |
+| GET | `/api/events?clubId=&search=&page=&pageSize=` | 200 (phân trang) |
+| GET | `/api/events/{id}` | 200 / 404 |
+| POST | `/api/events` | 201 / 400 |
+| PUT | `/api/events/{id}` | 200 / 400 / 404 |
+| DELETE | `/api/events/{id}` | 204 / 404 |
+| POST | `/api/events/{eventId}/registrations` | 201 / 400 / 404 / 409 |
+| GET | `/api/events/{eventId}/registrations` | 200 / 404 |
+| DELETE | `/api/events/{eventId}/registrations/{registrationId}` | 204 / 404 |
+| GET | `/api/reports/events?minRegistered=` | 200 (Dapper: báo cáo thống kê) |
 
-## Ghi chú thiết kế cần bạn trả lời trong README của repo nộp bài
+Mọi lỗi 4xx/5xx trả `application/problem+json` (RFC 9457) có `traceId`.
 
-1. Vì sao dự án này có `IEventRepository` nhưng không tạo `IMemberRepository` hay generic `IRepository<T>`?
-2. `IUnitOfWork` có cần thiết không khi `DbContext` đã là Unit of Work? Nêu một lý do giữ và một lý do bỏ.
+## Ghi chú thiết kế
 
-## Quy trình nộp bài
+### 1. Vì sao dự án này có `IEventRepository` nhưng không tạo `IMemberRepository` hay generic `IRepository<T>`?
 
-Làm trên nhánh `feature/ch04-<mssv>`, mỗi tính năng một commit theo Conventional Commits (ví dụ `feat(db): add EF Core mappings and Init migration`), rồi mở Pull Request về `main`, mô tả đủ what, why, how to test.
+- **Không tạo `IMemberRepository`**: `Member` trong phạm vi dự án này không có nhu cầu CRUD riêng, chỉ cần kiểm tra xem sinh viên có tồn tại khi đăng ký sự kiện hay không. Việc đặt `MemberExistsAsync` ngay trong `IRegistrationRepository` giúp thiết kế gọn nhẹ, tập trung đúng vào nghiệp vụ đăng ký.
+- **Không dùng Generic `IRepository<T>`**: `DbSet<T>` của EF Core vốn dĩ đã là một Generic Repository. Việc viết thêm một lớp vỏ generic không đem lại giá trị nghiệp vụ, làm che giấu các tính năng mạnh mẽ của EF và vi phạm nguyên tắc YAGNI (You Aren't Gonna Need It). Mỗi Aggregate có các câu truy vấn đặc thù (phân trang, lọc, kiểm tra trạng thái) nên cần interface riêng biệt.
+
+### 2. `IUnitOfWork` có cần thiết không khi `DbContext` đã là Unit of Work?
+
+- **Lý do GIỮ**: Giúp tầng Application hoàn toàn không bị phụ thuộc vào EF Core (tuân thủ Dependency Inversion Principle). Nhờ đó dễ dàng mock `IUnitOfWork.SaveChangesAsync()` bằng Moq khi viết unit test cho các handler ở Application layer.
+- **Lý do BỎ**: `DbContext` bản chất đã triển khai toàn vẹn Unit of Work pattern (Change Tracker + Transaction khi gọi `SaveChangesAsync`). Bọc thêm `IUnitOfWork` chỉ tạo ra một lớp trung gian thừa (boilerplate) mà không có thêm logic bổ trợ nào.
