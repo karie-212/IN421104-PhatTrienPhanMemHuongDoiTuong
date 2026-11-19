@@ -8,9 +8,11 @@ public record GetEventsQuery(Guid? ClubId = null, string? Search = null, int Pag
 
 public class GetEventsQueryHandler(IEventRepository events)
 {
-    public Task<PagedResult<EventDto>> HandleAsync(GetEventsQuery query, CancellationToken ct = default)
+    // Lọc theo club + từ khóa, phân trang trong SQL, trả DTO
+    public async Task<PagedResult<EventDto>> HandleAsync(GetEventsQuery query, CancellationToken ct = default)
     {
-        // TODO [Nhiệm vụ 3] Giống ClubService.SearchAsync: PageRequest.Of -> events.SearchAsync -> map sang EventDto.
-        throw new NotImplementedException();
+        var paging = PageRequest.Of(query.Page, query.PageSize);
+        var (items, total) = await events.SearchAsync(query.ClubId, query.Search, paging.Skip, paging.PageSize, ct);
+        return new PagedResult<EventDto>(items.Select(e => e.ToDto()).ToList(), total, paging.Page, paging.PageSize);
     }
 }

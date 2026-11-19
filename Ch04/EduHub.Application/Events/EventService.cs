@@ -15,21 +15,33 @@ public class EventService(IEventRepository events, IClubRepository clubs, IRegis
     public async Task<EventDto> GetByIdAsync(Guid id, CancellationToken ct = default)
         => (await events.GetByIdAsync(id, ct) ?? throw new NotFoundException("Sự kiện không tồn tại.")).ToDto();
 
-    public Task<EventDto> CreateAsync(CreateEventCommand cmd, CancellationToken ct = default)
+    public async Task<EventDto> CreateAsync(CreateEventCommand cmd, CancellationToken ct = default)
     {
-        // TODO [Nhiệm vụ 3] 1. Kiểm tra club tồn tại (clubs.ExistsAsync), nếu không: throw new BusinessRuleException(...)
-        //  2. Event.Create(...) với StartTime đổi sang UTC, events.Add(ev)
-        //  3. await uow.SaveChangesAsync(ct)   (đúng MỘT lần)
-        //  4. [Nhiệm vụ 6] logger.LogInformation với thuộc tính có cấu trúc {EventId}, {ClubId}, {Capacity}
-        //  5. return ev.ToDto()
-        throw new NotImplementedException();
+        if (!await clubs.ExistsAsync(cmd.ClubId, ct))
+            throw new BusinessRuleException("Câu lạc bộ không tồn tại.");
+
+        var ev = Event.Create(cmd.Name, cmd.ClubId, cmd.StartTime.ToUniversalTime(), cmd.Capacity,
+            cmd.Description, cmd.Location);
+        events.Add(ev);
+        await uow.SaveChangesAsync(ct);
+
+        // Log có cấu trúc: {EventId}, {ClubId} là thuộc tính tìm kiếm được, không chỉ là chuỗi
+        logger.LogInformation("Đã tạo sự kiện {EventId} cho câu lạc bộ {ClubId} với sức chứa {Capacity}",
+            ev.Id, ev.ClubId, ev.Capacity);
+        return ev.ToDto();
     }
 
-    public Task<EventDto> UpdateAsync(Guid id, UpdateEventCommand cmd, CancellationToken ct = default)
+    public async Task<EventDto> UpdateAsync(Guid id, UpdateEventCommand cmd, CancellationToken ct = default)
     {
-        // TODO [Nhiệm vụ 3] Lấy event (không có thì NotFoundException); nếu cmd.Capacity nhỏ hơn số người đã đăng ký
-        //  (registrations.CountActiveByEventIdAsync) thì BusinessRuleException; ev.Update(...); SaveChangesAsync; trả DTO.
-        throw new NotImplementedException();
+        var ev = await events.GetByIdAsync(id, ct) ?? throw new NotFoundException("Sự kiện không tồn tại.");
+
+        var registered = await registrations.CountActiveByEventIdAsync(id, ct);
+        if (cmd.Capacity < registered)
+            throw new BusinessRuleException($"Sức chứa không được nhỏ hơn số người đã đăng ký ({registered}).");
+
+        ev.Update(cmd.Name, cmd.Description, cmd.Location, cmd.StartTime.ToUniversalTime(), cmd.Capacity);
+        await uow.SaveChangesAsync(ct);
+        return ev.ToDto();
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)

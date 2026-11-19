@@ -3,11 +3,11 @@ using EduHub.API.Validation;
 
 namespace EduHub.API.Contracts;
 
-// Request DTO. [ApiController] tự trả 400 (ValidationProblemDetails) khi dữ liệu không hợp lệ.
+// Request DTO: validate đầu vào bằng DataAnnotations. [ApiController] tự trả 400 khi sai.
 public class CreateEventRequest
 {
-    // TODO [Nhiệm vụ 3] Thêm DataAnnotations:
-    //  Name: [Required(ErrorMessage = "Tên sự kiện không được để trống.")] và [StringLength(200)]
+    [Required(ErrorMessage = "Tên sự kiện không được để trống.")]
+    [StringLength(200)]
     public string Name { get; init; } = string.Empty;
 
     [StringLength(2000)]
@@ -19,16 +19,17 @@ public class CreateEventRequest
     [StringLength(200)]
     public string? Location { get; init; }
 
-    // TODO [Nhiệm vụ 3] Thêm [FutureDate] (đã có sẵn trong EduHub.API/Validation)
+    [FutureDate]
     public DateTime StartTime { get; init; }
 
-    // TODO [Nhiệm vụ 3] Thêm [Range(1, 10000, ErrorMessage = "Capacity phải lớn hơn 0.")]
+    [Range(1, 10000, ErrorMessage = "Capacity phải lớn hơn 0.")]
     public int Capacity { get; init; }
 }
 
 public class UpdateEventRequest
 {
-    // TODO [Nhiệm vụ 3] Áp dụng cùng các quy tắc validation như CreateEventRequest (Name, StartTime, Capacity)
+    [Required(ErrorMessage = "Tên sự kiện không được để trống.")]
+    [StringLength(200)]
     public string Name { get; init; } = string.Empty;
 
     [StringLength(2000)]
@@ -37,8 +38,10 @@ public class UpdateEventRequest
     [StringLength(200)]
     public string? Location { get; init; }
 
+    [FutureDate]
     public DateTime StartTime { get; init; }
 
+    [Range(1, 10000, ErrorMessage = "Capacity phải lớn hơn 0.")]
     public int Capacity { get; init; }
 }
 
