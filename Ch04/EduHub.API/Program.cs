@@ -25,10 +25,18 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<EduHubDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// TODO [Nhiệm vụ 2-5] Đăng ký DI (Scoped): IUnitOfWork -> EfUnitOfWork, IClubRepository -> EfClubRepository,
-//  IEventRepository -> EfEventRepository, IRegistrationRepository -> EfRegistrationRepository,
-//  IEventReportQuery -> DapperEventReportQuery, ClubService, EventService, GetEventsQueryHandler,
-//  RegisterForEventCommandHandler, GetEventRegistrationsQueryHandler, CancelRegistrationCommandHandler.
+// Scoped: một DbContext cho mỗi request; repository, Unit of Work và handler cùng dùng chung nó
+builder.Services.AddScoped<IUnitOfWork, EfUnitOfWork>();
+builder.Services.AddScoped<IClubRepository, EfClubRepository>();
+builder.Services.AddScoped<IEventRepository, EfEventRepository>();
+builder.Services.AddScoped<IRegistrationRepository, EfRegistrationRepository>();
+builder.Services.AddScoped<IEventReportQuery, DapperEventReportQuery>();
+builder.Services.AddScoped<ClubService>();
+builder.Services.AddScoped<EventService>();
+builder.Services.AddScoped<GetEventsQueryHandler>();
+builder.Services.AddScoped<RegisterForEventCommandHandler>();
+builder.Services.AddScoped<GetEventRegistrationsQueryHandler>();
+builder.Services.AddScoped<CancelRegistrationCommandHandler>();
 
 var app = builder.Build();
 
