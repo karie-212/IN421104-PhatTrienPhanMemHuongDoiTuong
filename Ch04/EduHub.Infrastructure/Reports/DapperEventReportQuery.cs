@@ -5,21 +5,29 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EduHub.Infrastructure.Reports;
 
-// Dapper: SQL tự viết, tham số hóa nên không bị SQL injection. Dùng chung kết nối của DbContext.
+// Dapper: SQL tự viết, tham số hóa (@minRegistered) nên không bị SQL injection.
+// Dùng chung kết nối của DbContext, nên không cần cấu hình thêm.
 public class DapperEventReportQuery(EduHubDbContext db) : IEventReportQuery
 {
-    // TODO [Nhiệm vụ 5] Viết câu SQL báo cáo: mỗi sự kiện có bao nhiêu lượt đăng ký còn hiệu lực.
-    //  Cột trả về (đặt alias đúng tên thuộc tính của EventReportRow): EventName, ClubName, Capacity, Registered
-    //  - JOIN clubs, LEFT JOIN registrations (bỏ Status = 'Cancelled') để sự kiện chưa ai đăng ký vẫn có dòng
-    //  - GROUP BY ..., HAVING COUNT(...) >= @minRegistered, ORDER BY Registered giảm dần
-    //  Lưu ý PostgreSQL: tên bảng/cột viết hoa phải đặt trong dấu nháy kép, ví dụ e."Name".
-    private const string Sql = "";
+    private const string Sql = """
+        SELECT e."Name"     AS "EventName",
+               c."Name"     AS "ClubName",
+               e."Capacity" AS "Capacity",
+               COUNT(r."Id") AS "Registered"
+        FROM events e
+        JOIN clubs c ON c."Id" = e."ClubId"
+        LEFT JOIN registrations r ON r."EventId" = e."Id" AND r."Status" <> 'Cancelled'
+        GROUP BY e."Id", e."Name", c."Name", e."Capacity"
+        HAVING COUNT(r."Id") >= @minRegistered
+        ORDER BY "Registered" DESC, "EventName"
+        """;
 
     public async Task<IReadOnlyList<EventReportRow>> GetRegistrationSummaryAsync(
         int minRegistered, CancellationToken ct = default)
     {
-        // TODO [Nhiệm vụ 5] Lấy kết nối bằng db.Database.GetDbConnection(), gọi conn.QueryAsync<EventReportRow>(...)
-        //  truyền tham số new { minRegistered } và CancellationToken (CommandDefinition).
-        throw new NotImplementedException();
+        var conn = db.Database.GetDbConnection();
+        var rows = await conn.QueryAsync<EventReportRow>(
+            new CommandDefinition(Sql, new { minRegistered }, cancellationToken: ct));
+        return rows.AsList();
     }
 }
