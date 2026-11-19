@@ -11,6 +11,8 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.*" />
     <PackageReference Include="Moq" Version="4.*" />
     <PackageReference Include="coverlet.collector" Version="6.*" />
+    <!-- SQLite in-memory: test repository và Dapper mà không cần PostgreSQL thật -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.*" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
@@ -18,5 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\EduHub.Application\EduHub.Application.csproj" />
     <ProjectReference Include="..\EduHub.Domain\EduHub.Domain.csproj" />
+    <ProjectReference Include="..\EduHub.Infrastructure\EduHub.Infrastructure.csproj" />
+    <ProjectReference Include="..\EduHub.API\EduHub.API.csproj" />
   </ItemGroup>
 </Project>
