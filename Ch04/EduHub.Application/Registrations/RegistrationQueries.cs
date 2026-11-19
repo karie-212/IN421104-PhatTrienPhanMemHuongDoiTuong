@@ -19,10 +19,13 @@ public class GetEventRegistrationsQueryHandler(IEventRepository events, IRegistr
 public class CancelRegistrationCommandHandler(IRegistrationRepository registrations, IUnitOfWork uow,
     ILogger<CancelRegistrationCommandHandler> logger)
 {
-    public Task HandleAsync(Guid eventId, Guid registrationId, CancellationToken ct = default)
+    // Hủy = đổi trạng thái sang Cancelled (giữ lịch sử), không xóa dòng
+    public async Task HandleAsync(Guid eventId, Guid registrationId, CancellationToken ct = default)
     {
-        // TODO [Nhiệm vụ 4] registrations.GetAsync (không có thì NotFoundException), reg.Cancel(), SaveChangesAsync, LogInformation.
-        //  Hủy = đổi Status sang Cancelled, không xóa dòng.
-        throw new NotImplementedException();
+        var reg = await registrations.GetAsync(eventId, registrationId, ct)
+                  ?? throw new NotFoundException("Đăng ký không tồn tại.");
+        reg.Cancel();
+        await uow.SaveChangesAsync(ct);
+        logger.LogInformation("Đã hủy đăng ký {RegistrationId} của sự kiện {EventId}", registrationId, eventId);
     }
 }
